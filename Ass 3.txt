@@ -1,0 +1,126 @@
+Q1) Write an SQL query to insert the above employee records into the EMPLOYEES table.
+Answer : insert into employees
+	(employee_id, first_name, last_name, job_id, salary, manager_id, department_id)
+	values
+	(100, 'steven', 'king', 1, 24000.00, 200, 10),
+	(101, 'neena', 'kochhar', 2, 17000.00, 200, 10),
+	(102, 'lex', 'de haan', 2, 17000.00, 200, 10),
+	(103, 'alexander', 'hunold', 3, 9000.00, 103, 60),
+	(104, 'bruce', 'ernst', 3, 6000.00, 103, 60),
+	(105, 'david', 'austin', 3, 4800.00, 103, 60),
+	(106, 'valli', 'pataballa', 3, 4800.00, 103, 60),
+	(107, 'diana', 'lorentz', 3, 4200.00, 114, 30),
+	(108, 'nancy', 'greenberg', 4, 12000.00, 145, 80),
+	(109, 'daniel', 'faviet', 4, 9000.00, 145, 80);
+
+
+
+
+Q2) Write a single SQL INSERT statement to insert at least 3 department records into the
+    DEPARTMENTS table.
+Answer : insert into departments
+	(department_id, department_name, manager_id, location_id)
+	values
+	(10, 'administration', 200, 1700),
+	(20, 'marketing', 201, 1800),
+	(30, 'purchasing', 114, 1700),
+	(60, 'it', 103, 1400),
+	(80, 'sales', 145, 2500);
+
+
+
+
+
+Q3) Write an SQL query to insert one new job record into the JOBS table ensuring duplicate
+    JOB_ID is not allowed.
+Answer : insert into jobs
+	(job_id, job_title, min_salary, max_salary)
+	select 5, 'database administrator', 8000, 18000
+	where not exists (
+    	select 1
+    	from jobs
+    	where job_id = 5
+	);
+
+
+
+
+
+Q4) Write an SQL query to increment the salary of each employee by 10%.
+Answer : update employees
+	set salary = salary * 1.10;
+
+
+
+
+Q5) Write an SQL query to set EMAIL = 'not available' for employees whose department_id is
+    80 and commission_pct is less than 0.20.
+Answer : update employees
+	set email = 'not available'
+	where department_id = 80
+	and commission_pct < 0.20;
+
+
+
+
+Q6) Write an SQL query to set EMAIL = 'not available' for employees who belong to the
+    'Purchasing' department.
+Answer : update employees e
+	join departments d
+	on e.department_id = d.department_id
+	set e.email = 'not available'
+	where d.department_name = 'purchasing';
+
+
+
+
+
+Q7) Write an SQL query to update EMAIL = 'not available' and COMMISSION_PCT = 0.10 for
+    all employees.
+Answer : update employees
+	set email = 'not available',
+    	commission_pct = 0.10;
+
+
+
+
+
+Q8) Write an SQL query to increase salary by 2000 for employees working in department_id =
+    60.
+Answer : update employees
+	set salary = salary + 2000
+	where department_id = 60;
+
+
+
+
+Q9) Write an SQL query to delete employees whose salary is less than 5000.
+Answer : delete from employees
+	where salary < 5000;
+
+
+
+
+Q10) Write an SQL query to insert one new employee record with your own suitable details (use a new employee_id).
+Answer : insert into employees
+	(employee_id, first_name, last_name, job_id, salary, manager_id, department_id)
+	values
+	(110, 'parth', 'limhan', 3, 7000.00, 103, 60);
+
+
+
+
+
+Q11) Write an SQL query to change manager_id to 300 for all employees in department_id = 80.
+Answer : update employees
+	set manager_id = 300
+	where department_id = 80;
+
+
+
+
+
+Q12) Write an SQL query to delete the department record where department_id = 20 and observe
+     the error if employees exist in that department.
+Answer : delete from departments
+	where department_id = 20;
