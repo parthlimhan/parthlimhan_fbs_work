@@ -1,0 +1,94 @@
+Q1) Write a stored function Annual_Salary that takes salary as input
+    and returns yearly salary (salary * 12).
+Answer : delimiter #
+
+create function annual_salary(p_salary decimal(10,2))
+returns decimal(10,2)
+deterministic
+begin
+    return p_salary * 12;
+end #
+
+delimiter ;
+
+
+
+
+Q2) Write a stored function Calculate_Bonus that takes salary as input
+    and returns bonus amount:
+    - If salary >= 80000 → bonus = 20%
+    - If salary between 50000 and 79999 → bonus = 10%
+    - Otherwise → bonus = 5%
+Answer : delimiter #
+
+create function calculate_bonus(p_salary decimal(10,2))
+returns decimal(10,2)
+deterministic
+begin
+    if p_salary >= 80000 then
+        return p_salary * 0.20;
+
+    elseif p_salary >= 50000 then
+        return p_salary * 0.10;
+
+    else
+        return p_salary * 0.05;
+    end if;
+end #
+
+delimiter ;
+
+
+
+
+Q3) Write a stored function Salary_Grade that takes salary as input
+    and returns grade:
+    - 'A' if salary >= 80000
+    - 'B' if salary between 50000 and 79999
+    - 'C' if salary < 50000
+Answer : delimiter #
+
+create function salary_grade(p_salary decimal(10,2))
+returns char(1)
+deterministic
+begin
+    if p_salary >= 80000 then
+        return 'a';
+
+    elseif p_salary >= 50000 then
+        return 'b';
+
+    else
+        return 'c';
+    end if;
+end #
+
+delimiter ;
+
+
+
+
+Q4) Write a stored function Employee_Exists that takes emp_id as input
+    and returns 1 if employee exists, otherwise 0.
+Answer : delimiter #
+
+create function employee_exists(p_emp_id int)
+returns int
+deterministic
+reads sql data
+begin
+    declare v_count int default 0;
+
+    select count(*)
+    into v_count
+    from employee
+    where emp_id = p_emp_id;
+
+    if v_count > 0 then
+        return 1;
+    else
+        return 0;
+    end if;
+end #
+
+delimiter ;

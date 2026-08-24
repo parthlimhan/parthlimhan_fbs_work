@@ -1,0 +1,442 @@
+Q1) Procedure with IN Parameters (Create New Account)
+Write a procedure named Create_Account that accepts:
+- account_no (IN)
+- customer_name (IN)
+- opening_balance (IN)
+- account_type (IN)
+
+Rules:
+- Account number must be unique (should not already exist)
+- Opening balance must be greater than or equal to 0
+- Account type must be either 'Saving' or 'Current'
+Transaction Control:
+- If all validations are satisfied, insert the record and COMMIT
+- If validation fails, do not insert data, ROLLBACK and display proper message
+
+Answer : delimiter #
+
+create procedure create_account(
+    in p_account_no int,
+    in p_customer_name varchar(100),
+    in p_opening_balance decimal(10,2),
+    in p_account_type varchar(20)
+)
+begin
+    declare v_count int default 0;
+
+    select count(*)
+    into v_count
+    from bank_account
+    where account_no = p_account_no;
+
+    if v_count > 0 then
+        rollback;
+        select 'account number already exists' as message;
+
+    elseif p_opening_balance < 0 then
+        rollback;
+        select 'opening balance cannot be negative' as message;
+
+    elseif p_account_type not in ('saving', 'current') then
+        rollback;
+        select 'account type must be saving or current' as message;
+
+    else
+        insert into bank_account
+        (account_no, customer_name, opening_balance, account_type, balance)
+        values
+        (p_account_no, p_customer_name, p_opening_balance,
+         p_account_type, p_opening_balance);
+
+        commit;
+        select 'account created successfully' as message;
+    end if;
+end #
+
+delimiter ;
+
+
+
+
+------------------------------------------------------------
+Q2) Procedure with OUT Parameter (Check Balance)
+Write a procedure named Check_Balance that accepts:
+- account_no (IN)
+- current_balance (OUT)
+Rules:
+- If account exists, return the balance using OUT parameter
+- If account does not exist, display message and set OUT value as NULL
+
+Answer : delimiter #
+
+create procedure check_balance(
+    in p_account_no int,
+    out p_current_balance decimal(10,2)
+)
+begin
+    declare v_count int default 0;
+
+    select count(*)
+    into v_count
+    from bank_account
+    where account_no = p_account_no;
+
+    if v_count = 0 then
+        set p_current_balance = null;
+        select 'account does not exist' as message;
+    else
+        select balance
+        into p_current_balance
+        from bank_account
+        where account_no = p_account_no;
+    end if;
+end #
+
+delimiter ;
+
+
+
+
+------------------------------------------------------------
+Q3) Procedure with INOUT Parameter (Deposit Money)
+Write a procedure named Deposit_Amount that accepts:
+- account_no (IN)
+- deposit_amount (INOUT)
+Rules:
+- Validate account exists
+- Deposit amount must be greater than 0
+- If valid, add deposit_amount to balance
+- Update deposit_amount with new balance
+- COMMIT if successful
+- Otherwise ROLLBACK and display message
+
+Answer : delimiter #
+
+create procedure deposit_amount(
+    in p_account_no int,
+    inout p_deposit_amount decimal(10,2)
+)
+begin
+    declare v_count int default 0;
+    declare v_balance decimal(10,2);
+
+    select count(*)
+    into v_count
+    from bank_account
+    where account_no = p_account_no;
+
+    if v_count = 0 then
+        rollback;
+        select 'account does not exist' as message;
+
+    elseif p_deposit_amount <= 0 then
+        rollback;
+        select 'deposit amount must be greater than 0' as message;
+
+    else
+        select balance
+        into v_balance
+        from bank_account
+        where account_no = p_account_no;
+
+        update bank_account
+        set balance = balance + p_deposit_amount
+        where account_no = p_account_no;
+
+        set p_deposit_amount = v_balance + p_deposit_amount;
+
+        commit;
+        select 'deposit successful' as message;
+    end if;
+end #
+
+delimiter ;
+
+
+
+
+------------------------------------------------------------
+Q4) Procedure with Conditional TCL (Withdraw Money)
+Write a procedure named Withdraw_Amount that accepts:
+- account_no (IN)
+- withdraw_amount (IN)
+Rules:
+- Validate account exists
+- Withdraw amount must be greater than 0
+- If sufficient balance, deduct amount and COMMIT
+- If insufficient balance, ROLLBACK and display message
+- If account not found, ROLLBACK and display message
+
+Answer : delimiter #
+
+create procedure withdraw_amount(
+    in p_account_no int,
+    in p_withdraw_amount decimal(10,2)
+)
+begin
+    declare v_count int default 0;
+    declare v_balance decimal(10,2);
+
+    select count(*)
+    into v_count
+    from bank_account
+    where account_no = p_account_no;
+
+    if v_count = 0 then
+        rollback;
+        select 'account does not exist' as message;
+
+    elseif p_withdraw_amount <= 0 then
+        rollback;
+        select 'withdraw amount must be greater than 0' as message;
+
+    else
+        select balance
+        into v_balance
+        from bank_account
+        where account_no = p_account_no;
+
+        if v_balance >= p_withdraw_amount then
+
+            update bank_account
+            set balance = balance - p_withdraw_amount
+            where account_no = p_account_no;
+
+            commit;
+            select 'withdrawal successful' as message;
+
+        else
+            rollback;
+            select 'insufficient balance' as message;
+        end if;
+    end if;
+end #
+
+delimiter ;
+
+
+
+
+------------------------------------------------------------
+Q5) Procedure with Conditional TCL (Fund Transfer)
+Write a procedure named Transfer_Funds that accepts:
+- from_account (IN)
+- to_account (IN)
+- transfer_amount (IN)
+Rules:
+- Validate both accounts exist
+- Transfer amount must be greater than 0
+- Sender must have sufficient balance
+- Deduct from sender and add to receiver
+- COMMIT only if both updates succeed
+- ROLLBACK if any validation fails or error occurs
+
+Answer : delimiter #
+
+create procedure transfer_funds(
+    in p_from_account int,
+    in p_to_account int,
+    in p_transfer_amount decimal(10,2)
+)
+begin
+    declare v_from_count int default 0;
+    declare v_to_count int default 0;
+    declare v_balance decimal(10,2);
+
+    select count(*)
+    into v_from_count
+    from bank_account
+    where account_no = p_from_account;
+
+    select count(*)
+    into v_to_count
+    from bank_account
+    where account_no = p_to_account;
+
+    if v_from_count = 0 then
+        rollback;
+        select 'sender account does not exist' as message;
+
+    elseif v_to_count = 0 then
+        rollback;
+        select 'receiver account does not exist' as message;
+
+    elseif p_transfer_amount <= 0 then
+        rollback;
+        select 'transfer amount must be greater than 0' as message;
+
+    elseif p_from_account = p_to_account then
+        rollback;
+        select 'sender and receiver accounts must be different' as message;
+
+    else
+        select balance
+        into v_balance
+        from bank_account
+        where account_no = p_from_account;
+
+        if v_balance >= p_transfer_amount then
+
+            update bank_account
+            set balance = balance - p_transfer_amount
+            where account_no = p_from_account;
+
+            update bank_account
+            set balance = balance + p_transfer_amount
+            where account_no = p_to_account;
+
+            commit;
+            select 'fund transfer successful' as message;
+
+        else
+            rollback;
+            select 'insufficient balance in sender account' as message;
+        end if;
+    end if;
+end #
+
+delimiter ;
+
+
+
+
+------------------------------------------------------------
+Q6) Procedure with Exception Handling (Safe Balance Check)
+Write a procedure named Safe_Balance_Check that accepts:
+- account_no (IN)
+
+Rules:
+- Display balance if account exists
+- Handle NO_DATA_FOUND exception with proper message
+
+Answer : delimiter #
+
+create procedure safe_balance_check(
+    in p_account_no int
+)
+begin
+    declare v_balance decimal(10,2);
+
+    declare continue handler for not found
+    begin
+        select 'account does not exist' as message;
+    end;
+
+    select balance
+    into v_balance
+    from bank_account
+    where account_no = p_account_no;
+
+    select v_balance as balance;
+end #
+
+delimiter ;
+
+
+
+
+------------------------------------------------------------
+Q7) Procedure with Conditional Update (Minimum Balance Penalty)
+Write a procedure named Apply_Penalty that accepts:
+- account_no (IN)
+Rules:
+- Validate account exists
+- If balance is less than 1000, deduct penalty of 100 and COMMIT
+- Otherwise display "No Penalty Applied"
+- ROLLBACK if account not found
+
+Answer : delimiter #
+
+create procedure apply_penalty(
+    in p_account_no int
+)
+begin
+    declare v_count int default 0;
+    declare v_balance decimal(10,2);
+
+    select count(*)
+    into v_count
+    from bank_account
+    where account_no = p_account_no;
+
+    if v_count = 0 then
+        rollback;
+        select 'account does not exist' as message;
+
+    else
+        select balance
+        into v_balance
+        from bank_account
+        where account_no = p_account_no;
+
+        if v_balance < 1000 then
+
+            update bank_account
+            set balance = balance - 100
+            where account_no = p_account_no;
+
+            commit;
+            select 'penalty of 100 applied' as message;
+
+        else
+            select 'no penalty applied' as message;
+        end if;
+    end if;
+end #
+
+delimiter ;
+
+
+
+
+------------------------------------------------------------
+Q8) Procedure with Conditional TCL (Close Account)
+Write a procedure named Close_Account that accepts:
+- account_no (IN)
+Rules:
+- Validate account exists
+- Account can be closed only if balance is zero
+- If balance is zero, delete record and COMMIT
+- If balance is not zero, ROLLBACK and display message
+- If account not found, ROLLBACK and display message
+
+Answer : delimiter #
+
+create procedure close_account(
+    in p_account_no int
+)
+begin
+    declare v_count int default 0;
+    declare v_balance decimal(10,2);
+
+    select count(*)
+    into v_count
+    from bank_account
+    where account_no = p_account_no;
+
+    if v_count = 0 then
+        rollback;
+        select 'account does not exist' as message;
+
+    else
+        select balance
+        into v_balance
+        from bank_account
+        where account_no = p_account_no;
+
+        if v_balance = 0 then
+
+            delete from bank_account
+            where account_no = p_account_no;
+
+            commit;
+            select 'account closed successfully' as message;
+
+        else
+            rollback;
+            select 'account cannot be closed because balance is not zero' as message;
+        end if;
+    end if;
+end #
+
+delimiter ;

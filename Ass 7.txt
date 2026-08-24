@@ -1,0 +1,102 @@
+Q1) Start a transaction and insert a new member record into Member table.
+    Save the changes permanently.
+Answer : set autocommit = 0;
+
+	start transaction;
+
+	insert into member
+	(member_id, member_name, member_address, acc_open_date,
+	membership_type, fees_paid, max_books_allowed, penalty_amount)
+	values
+	(8, 'rahul sharma', 'mumbai', '2026-08-24',
+ 	'annual', 1000, 5, 0);
+
+	commit;
+
+Q2) Start a transaction and insert a new book record into Books table.
+    Undo the insertion using rollback.
+Answer : start transaction;
+
+	insert into books
+	(book_no, book_name, author_name, cost, category)
+	values
+	(111, 'mysql basics', 'john smith', 500, 'database');
+
+	rollback;
+
+Q3) Start a transaction and update Penalty_Amount of a member.
+    Create a savepoint before update, then rollback to the savepoint.
+Answer : start transaction;
+
+	savepoint before_penalty_update;
+
+	update member
+	set penalty_amount = 200
+	where member_id = 2;
+
+	rollback to savepoint before_penalty_update;
+
+	commit;
+
+Q4) Start a transaction and perform the following steps:
+    - Issue a book to a member (insert into Issue table)
+    - Update the Max_Books_Allowed count of that member
+    Commit the transaction only if both operations succeed.
+Answer : start transaction;
+
+	insert into issue
+	(lib_issue_id, book_no, member_id, issue_date, return_date)
+	values
+	(7007, 101, 2, '2026-08-24', null);
+
+	update member
+	set max_books_allowed = max_books_allowed - 1
+	where member_id = 2;
+
+	commit;
+
+Q5) Start a transaction and perform the following:
+    - Update the cost of a book
+    - Create a savepoint
+    - Delete one issue record
+    Rollback only the delete operation using savepoint.
+Answer : start transaction;
+
+	update books
+	set cost = 600
+	where book_no = 103;
+
+	savepoint before_delete;
+
+	delete from issue
+	where lib_issue_id = 7005;
+
+	rollback to savepoint before_delete;
+
+	commit;
+
+Q6) Demonstrate that after COMMIT, rollback cannot undo the changes.
+Answer : start transaction;
+
+	update books
+	set cost = 700
+	where book_no = 103;
+
+	commit;
+
+Q7) Demonstrate that SAVEPOINT allows partial rollback inside a transaction.
+Answer : start transaction;
+
+	update books
+	set cost = 800
+	where book_no = 103;
+
+	savepoint sp1;
+
+	update books
+	set cost = 900
+	where book_no = 104;
+
+	rollback to savepoint sp1;
+
+	commit;
